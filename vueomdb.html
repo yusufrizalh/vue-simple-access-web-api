@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mengambil Info Film OMDb dengan VueJS</title>
+
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.11/vue.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/velocity/2.0.5/velocity.js"></script>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
+        integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
+        crossorigin="anonymous"></script>
+
+    <style>
+        .tengah {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            background-color: lavender;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="tengah">
+        <div class="container">
+            <div class="card" id="app">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div>
+                            <movie-data :movie="movie" :error="error"></movie-data>
+                        </div>
+                        <template id="tpl-movie-data" v-if="!loading">
+                            <div v-if="!error">
+                                <!-- gambar ada disini -->
+                                <img class="card-img" :src="movie.Poster" @load="imgLoaded" v-show="showImg" />
+                            </div>
+                        </template>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="card-body">
+                            <input id="movie-search" class="form-control" type="text" 
+                                placeholder="Tulis sebuah judul film" @keyup.enter="searchHandler" /> <br>
+                            
+                            <h5 class="card-title">{{ movie.Title }}</h5>
+                            <p class="card-text">{{ movie.Plot }}</p>
+                            <ul class="list-group list-group-flus">
+                                <li class="list-group-item"><b>Rilis: </b>{{ movie.Released }}</li>
+                                <li class="list-group-item"><b>Ditulis oleh: </b>{{ movie.Writer }}</li>
+                                <li class="list-group-item"><b>Genre: </b>{{ movie.Genre }}</li>
+                                <li class="list-group-item"><b>Durasi: </b>{{ movie.Runtime }}</li>
+                                <li class="list-group-item"><b>Penghargaan: </b>{{ movie.Awards }}</li>
+                                <li class="list-group-item"><b>Pemain: </b>{{ movie.Actors }}</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div v-show="error" class="tengah">
+                        <h5>{{ movie.Error }}</h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // informasi omdb
+        const key = '75db9f6d';
+        const defaultTitle = 'joker';
+        const url = `https://www.omdbapi.com/?apikey=${key}&t=`;
+
+        Vue.component("movie-data", {
+            props: ["movie", "error"],
+            template: "#tpl-movie-data",
+
+            data: function () {
+                return {
+                    showImg: false,
+                };
+            },
+
+            methods: {
+                imgLoaded: function () {
+                    this.showImg = true;
+                },
+            },
+        });
+
+        var app = new Vue({
+            el: "#app",
+
+            data: {
+                movie: {},
+                loading: true,
+                error: false,
+            },
+
+            methods: {
+                findMovie: function (title) {
+                    this.error = false;
+                    this.loading = true;
+
+                    fetch(url + title)
+                        .then((res) => res.json())
+                        .then((data) => {
+                            this.movie = data;
+                            if (this.movie.Error) this.error = true;
+                            this.loading = false;
+                        })
+                        .catch((err) => {
+                            this.error = true;
+                            this.loading = false;
+                        });
+                },
+
+                searchHandler: function (e) {
+                    if (e.target.value) {
+                        this.findMovie(e.target.value);
+                        e.target.blur();
+                        console.log(e);
+                    }
+                },
+            },
+
+            mounted() {
+                this.findMovie(defaultTitle);
+            },
+        });
+    </script>
+</body>
+
+</html>
